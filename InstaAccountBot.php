@@ -134,6 +134,8 @@ class InstaAccountBot
         $arrPostData['gdpr_s'] = '%5B0%2C2%2C0%2Cnull%5D';
         $arrPostData['tos_version'] = 'eu';
 
+        $headers[] = 'content-length: '.strlen(http_build_query($arrPostData));
+
         $strUrl = 'https://www.instagram.com/accounts/web_create_ajax/';
 
         $ch = curl_init();
