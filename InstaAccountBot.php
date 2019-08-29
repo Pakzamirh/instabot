@@ -9,15 +9,16 @@ class InstaAccountBot
     private $email;
     private $username;
     private $password;
+    private $mid;
 
     private $headers = array();
-    private $user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1";
+    private $user_agent = "Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0";
 
     private function randomPassword() {
-        $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.';
         $pass = array();
         $alphaLength = strlen($alphabet) - 1;
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 25; $i++) {
             $n = rand(0, $alphaLength);
             $pass[] = $alphabet[$n];
         }
@@ -54,13 +55,13 @@ class InstaAccountBot
 
     private function usr2id($username)
     {
-        $user_id      = file_get_contents('https://www.instagram.com/' . $username . '/');
+        $user_id = file_get_contents('https://www.instagram.com/' . $username . '/');
         $re = '/sharedData\s=\s(.*[^\"]);<.script>/ixU';
 
         preg_match_all($re, $user_id, $id_username, PREG_SET_ORDER);
 
         $data = json_decode($id_username[0][1], true);
-        $id   = $data['entry_data']['ProfilePage']['0']['graphql']['user']['id'];
+        $id = $data['entry_data']['ProfilePage']['0']['graphql']['user']['id'];
 
         return $id;
     }
@@ -97,9 +98,9 @@ class InstaAccountBot
 
         $json = json_decode($result , true);
 
-        $this->name = $json['results']['0']['name']['first'].' '.$json['results']['0']['name']['last'];
-        $this->email = $json['results']['0']['login']['username'].'x3o'.'@'.'gmail.com';
-        $this->username = $json['results']['0']['login']['username'].'x3o';
+        $this->name = 'as'.$json['results']['0']['name']['first'].'ru';
+        $this->email = $json['results']['0']['login']['username'].'ras'.'@'.'sadhus.com';
+        $this->username = $json['results']['0']['login']['username'].'xclo';
 
         return true;
     }
@@ -109,43 +110,41 @@ class InstaAccountBot
         $this->csrftoken = $this->generateCsrfToken();
         $this->password  = $this->randomPassword();
         $this->getAccountData();
+        $this->mid = $this->generateClientId();
 
         $headers = $this->headers;
-        $headers[] = 'content-type: application/x-www-form-urlencoded';
-        $headers[] = 'accept: */*';
-        $headers[] = 'x-requested-with: XMLHttpRequest';
-        $headers[] = 'x-ig-app-id: 1217981644879628';
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers[] = 'Accept: */*';
         $headers[] = 'accept-encoding: br, gzip, deflate';
-        $headers[] = 'accept-language: en-en';
-        $headers[] = 'x-instagram-ajax: 32fa4119f37f';
-        $headers[] = 'origin: https://www.instagram.com';
-        $headers[] = 'referer: https://www.instagram.com/accounts/signup/username';
-        $headers[] = 'x-ig-www-claim: 0';
+        $headers[] = 'X-Requested-With: XMLHttpRequest';
+        $headers[] = 'Accept-Language: en-US,en;q=0.5';
+        $headers[] = 'x-instagram-ajax: 1';
+        $headers[] = 'X-IG-App-ID: 936619743392459';
+        $headers[] = 'Referer: https://www.instagram.com/';
+        $headers[] = 'X-Ig-Www-Claim: 0';
         $headers[] = 'x-csrftoken: '.$this->csrftoken;
-        $headers[] = 'cookie: csrftoken='.$this->csrftoken.'; rur=FTW; ig_cb=1; mid='.$this->generateClientId().'';
+        $headers[] = 'Cookie: csrftoken='.$this->csrftoken.'; rur=FRC; ig_cb=1; mid='.$this->mid;
 
         $arrPostData = array();
         $arrPostData['email'] = $this->email;
         $arrPostData['password'] = $this->password;
         $arrPostData['username'] = $this->username;
         $arrPostData['first_name'] = $this->name;
-        $arrPostData['client_id'] = $this->generateClientId();
         $arrPostData['seamless_login_enabled'] = '1';
-        $arrPostData['gdpr_s'] = '%5B0%2C2%2C0%2Cnull%5D';
         $arrPostData['tos_version'] = 'eu';
-
-        $headers[] = 'content-length: '.strlen(http_build_query($arrPostData));
+        $arrPostData['gdpr_s'] = '%5B0%2C2%2C0%2Cnull%5D';
+        $arrPostData['opt_into_one_tap'] = 'false';
+        $arrPostData['client_id'] = $this->mid;
 
         $strUrl = 'https://www.instagram.com/accounts/web_create_ajax/';
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,$strUrl);
+        curl_setopt($ch, CURLOPT_URL, $strUrl);
         curl_setopt($ch, CURLOPT_USERAGENT, $this->user_agent);
-        curl_setopt($ch, CURLOPT_COOKIE, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         if($proxy !== null)
         {
-            curl_setopt($ch, CURLOPT_PROXY , $proxy);
+            curl_setopt($ch, CURLOPT_PROXY, $proxy);
             curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
         }
         curl_setopt($ch, CURLOPT_POST, true);
@@ -153,8 +152,6 @@ class InstaAccountBot
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($arrPostData));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         $result = curl_exec($ch);
 
         if(curl_errno($ch) !== 28 AND $result !== false)
