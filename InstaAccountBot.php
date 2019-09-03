@@ -113,17 +113,21 @@ class InstaAccountBot
         $this->mid = $this->generateClientId();
 
         $headers = $this->headers;
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers[] = 'User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0';
         $headers[] = 'Accept: */*';
-        $headers[] = 'accept-encoding: br, gzip, deflate';
-        $headers[] = 'X-Requested-With: XMLHttpRequest';
         $headers[] = 'Accept-Language: en-US,en;q=0.5';
-        $headers[] = 'x-instagram-ajax: 1';
+        $headers[] = 'Accept-Encoding: gzip, deflate, br';
+        $headers[] = 'Referer: https://www.instagram.com/accounts/emailsignup/';
+        $headers[] = 'X-CSRFToken: '.$this->csrftoken;
+        $headers[] = 'X-Instagram-AJAX: 1';
         $headers[] = 'X-IG-App-ID: 936619743392459';
-        $headers[] = 'Referer: https://www.instagram.com/';
-        $headers[] = 'X-Ig-Www-Claim: 0';
-        $headers[] = 'x-csrftoken: '.$this->csrftoken;
-        $headers[] = 'Cookie: csrftoken='.$this->csrftoken.'; rur=FRC; ig_cb=1; mid='.$this->mid;
+        $headers[] = 'X-IG-WWW-Claim: 0';
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers[] = 'X-Requested-With: XMLHttpRequest';
+        $headers[] = 'Cookie: csrftoken='.$this->csrftoken.'; rur=FRC; mid='.$this->mid;
+        $headers[] = 'Connection: keep-alive';
+        $headers[] = 'Pragma: no-cache';
+        $headers[] = 'Cache-Control: no-cache';
 
         $arrPostData = array();
         $arrPostData['email'] = $this->email;
@@ -138,21 +142,28 @@ class InstaAccountBot
 
         $strUrl = 'https://www.instagram.com/accounts/web_create_ajax/';
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $strUrl);
-        curl_setopt($ch, CURLOPT_USERAGENT, $this->user_agent);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        if($proxy !== null)
-        {
-            curl_setopt($ch, CURLOPT_PROXY, $proxy);
-            curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+        for ($x = 0; $x <= 3; $x++) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $strUrl);
+            curl_setopt($ch, CURLOPT_USERAGENT, $this->user_agent);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            if($proxy !== null)
+            {
+                curl_setopt($ch, CURLOPT_PROXY, $proxy);
+                curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+            }
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_ENCODING, '');
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($arrPostData));
+            $result = curl_exec($ch);
+
+            if($result === false)
+            {
+                break;
+            }
         }
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_ENCODING, '');
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($arrPostData));
-        $result = curl_exec($ch);
 
         if(curl_errno($ch) !== 28 AND $result !== false)
         {
